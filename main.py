@@ -80,3 +80,31 @@ st.sidebar.markdown("---")
 if not df.empty:
     csv = df.to_csv(index=False).encode('utf-8-sig')
     st.sidebar.download_button("📤 데이터 다운로드", csv, "학습데이터.csv", "text/csv")
+# 사이드바 폼 내에서 여러 과목 입력
+st.sidebar.header("📥 하루 학습 데이터 입력")
+
+with st.sidebar.form("multi_subject_form"):
+    date = st.date_input("날짜", datetime.today())
+    num_subjects = st.number_input("입력할 과목 수", min_value=1, max_value=10, value=1, step=1)
+    
+    subject_data = []
+    for i in range(int(num_subjects)):
+        st.markdown(f"**과목 {i+1}**")
+        subject = st.text_input(f"과목 이름 {i+1}", key=f"subject_{i}")
+        hours = st.number_input(f"공부 시간 (시간) - {i+1}", 0.0, 24.0, step=0.5, key=f"hours_{i}")
+        if subject:
+            subject_data.append({"날짜": date, "과목": subject, "공부 시간": hours})
+    
+    goal = st.text_area("오늘 목표", "")
+    achievement = st.text_area("성취도/결과", "")
+    submit = st.form_submit_button("저장")
+
+if submit:
+    new_df = pd.DataFrame(subject_data)
+    new_df["목표"] = goal
+    new_df["성취도"] = achievement
+    st.session_state.study_data = pd.concat(
+        [st.session_state.study_data, new_df],
+        ignore_index=True
+    )
+    st.success(f"✅ {len(subject_data)}개 과목 데이터가 저장되었습니다.")
